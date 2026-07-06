@@ -1,0 +1,96 @@
+-- CLOUD HUB MM2 - FULL VERSION
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size, Main.Position = UDim2.new(0, 250, 0, 300), UDim2.new(0.5, -125, 0.5, -150)
+Main.BackgroundColor3 = Color3.fromRGB(20, 15, 30)
+Main.Active, Main.Draggable = true, true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
+
+local Grad = Instance.new("UIGradient", Main)
+Grad.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.fromRGB(124, 58, 237)), ColorSequenceKeypoint.new(1, Color3.fromRGB(16, 185, 129))})
+
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "CloudHub"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 20
+Title.Parent = Main
+
+local function createBtn(text)
+    local btn = Instance.new("TextButton", Main)
+    btn.Size = UDim2.new(0, 220, 0, 40)
+    btn.Position = UDim2.new(0, 15, 0, #Main:GetChildren() * 45)
+    btn.BackgroundColor3 = Color3.fromRGB(15, 45, 25)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Text = text
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.Parent = Main
+    return btn
+end
+
+local lp = game.Players.LocalPlayer
+local hum = lp.Character and lp.Character:FindFirstChild("Humanoid")
+
+-- СКОРОСТЬ 25
+lp.CharacterAdded:Connect(function(c) c:WaitForChild("Humanoid").WalkSpeed = 25 end)
+if hum then hum.WalkSpeed = 25 end
+
+-- ФУНКЦИИ
+local AutoFarm = createBtn("Auto-Farm: OFF")
+local AntiFling = createBtn("Anti-Fling: ON")
+local AntiAFK = createBtn("Anti-AFK: ON")
+
+-- ЛОГИКА ФАРМА (WALK)
+_G.Farm = false
+AutoFarm.MouseButton1Click:Connect(function()
+    _G.Farm = not _G.Farm
+    AutoFarm.Text = _G.Farm and "Auto-Farm: ON" or "Auto-Farm: OFF"
+    while _G.Farm do
+        task.wait(0.5)
+        local coins = workspace:FindFirstChild("CoinContainer", true)
+        if coins then
+            for _, c in pairs(coins:GetChildren()) do
+                if c:IsA("BasePart") then
+                    c.Size = Vector3.new(12, 12, 12)
+                    -- Движение к монетке (Walk)
+                    if lp.Character and lp.Character:FindFirstChild("Humanoid") then
+                        lp.Character.Humanoid:MoveTo(c.Position - Vector3.new(0, 10, 0))
+                    end
+                end
+            end
+        end
+        -- RESET 40
+        if lp.leaderstats and lp.leaderstats.Coins.Value >= 40 then
+            lp.Character:BreakJoints()
+        end
+    end
+end)
+
+-- ANTI-FLING
+_G.Fling = true
+AntiFling.MouseButton1Click:Connect(function()
+    _G.Fling = not _G.Fling
+    AntiFling.Text = _G.Fling and "Anti-Fling: ON" or "Anti-Fling: OFF"
+end)
+task.spawn(function()
+    while true do
+        if _G.Fling then
+            for _, p in pairs(game.Players:GetPlayers()) do
+                if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    p.Character.HumanoidRootPart.CanCollide = false
+                end
+            end
+        end
+        task.wait(1)
+    end
+end)
+
+-- ANTI-AFK
+AntiAFK.MouseButton1Click:Connect(function() 
+    print("Anti-AFK is always active") 
+end)
+lp.Idled:Connect(function() 
+    game:GetService("VirtualUser"):Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame) 
+end)
